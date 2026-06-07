@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>電影影集 O/X 挑戰賽</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 50px; background-color: #f0f2f5; }
+        #question-box { width: 80%; height: 200px; border: 4px solid #333; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: white; margin-bottom: 20px; text-align: center; padding: 20px; }
+        .btn { padding: 15px 30px; font-size: 18px; cursor: pointer; margin: 10px; border: none; border-radius: 8px; color: white; }
+        #next-btn { background-color: #007bff; }
+        #answer-display { font-size: 30px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>🎬 電影與影集 O/X 挑戰賽</h1>
+    <div id="question-box">點擊下方按鈕開始題目</div>
+    <button id="next-btn" class="btn" onclick="nextQuestion()">抽取下一題</button>
+    <div id="answer-display"></div>
+
+    <script>
+        const questions = [
+            { q: "《鐵達尼號》中，蘿絲最後讓傑克一起爬上那塊木板了嗎？", a: "X" },
+            { q: "《魷魚遊戲》中，第一關遊戲是「木頭人」嗎？", a: "O" },
+            { q: "《玩命關頭》系列中，馮·迪索飾演的角色叫做路克·哈柏？", a: "X" },
+            { q: "《哈利波特》系列中，石內卜教授一直是佛地魔的忠實部下嗎？", a: "X" },
+            { q: "《絕命毒師》的主角華特·懷特原本是一名高中化學老師？", a: "O" }
+        ];
+
+        let currentAnswer = "";
+
+        function nextQuestion() {
+            const randomIndex = Math.floor(Math.random() * questions.length);
+            const item = questions[randomIndex];
+            document.getElementById('question-box').innerText = item.q;
+            document.getElementById('answer-display').innerText = "點擊揭曉答案";
+            currentAnswer = item.a;
+        }
+
+        // 點擊框框揭曉答案
+        document.getElementById('question-box').onclick = function() {
+            if(currentAnswer) {
+                document.getElementById('answer-display').innerText = "答案是：" + currentAnswer;
+            }
+        };
+    </script>
+</body>
+</html>
