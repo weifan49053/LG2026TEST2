@@ -2,47 +2,242 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>電影影集 O/X 挑戰賽</title>
+    <title>🎬 LG AI影音搜尋大挑戰</title>
     <style>
-        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding-top: 50px; background-color: #f0f2f5; }
-        #question-box { width: 80%; height: 200px; border: 4px solid #333; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 24px; background: white; margin-bottom: 20px; text-align: center; padding: 20px; }
-        .btn { padding: 15px 30px; font-size: 18px; cursor: pointer; margin: 10px; border: none; border-radius: 8px; color: white; }
-        #next-btn { background-color: #007bff; }
-        #answer-display { font-size: 30px; font-weight: bold; margin-top: 20px; }
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: rgba(20, 27, 45, 0.7);
+            --team-a-glow: #ff007f;
+            --team-b-glow: #00f0ff;
+            --text-main: #ffffff;
+        }
+
+        body { 
+            font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; 
+            background: radial-gradient(circle at center, #1e1e38 0%, var(--bg-color) 100%);
+            color: var(--text-main);
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+            overflow-x: hidden;
+        }
+        
+        h1 {
+            font-size: 2.8rem; font-weight: 900; letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5), 0 0 30px #6366f1;
+            margin-bottom: 30px; animation: pulse 2s infinite alternate;
+        }
+
+        /* 華麗計分板 */
+        .score-board { 
+            display: flex; justify-content: space-between; 
+            width: 90%; max-width: 700px; margin-bottom: 25px; gap: 20px;
+        }
+        .team { 
+            flex: 1; padding: 20px; border-radius: 16px; 
+            background: var(--card-bg); backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.1); text-align: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .team-title { font-size: 1.2rem; letter-spacing: 2px; color: #94a3b8; margin-bottom: 5px; }
+        .team-score { font-size: 3.5rem; font-weight: 900; font-family: monospace; }
+        
+        /* 隊伍激活狀態燈效 */
+        .team-a.active { 
+            border-color: var(--team-a-glow); 
+            box-shadow: 0 0 25px var(--team-a-glow);
+            transform: scale(1.05);
+        }
+        .team-a.active .team-title { color: var(--team-a-glow); text-shadow: 0 0 8px var(--team-a-glow); }
+        .team-b.active { 
+            border-color: var(--team-b-glow); 
+            box-shadow: 0 0 25px var(--team-b-glow);
+            transform: scale(1.05);
+        }
+        .team-b.active .team-title { color: var(--team-b-glow); text-shadow: 0 0 8px var(--team-b-glow); }
+        
+        /* 當前作答提示框 */
+        .turn-indicator {
+            font-size: 1.4rem; font-weight: bold; margin-bottom: 25px; padding: 8px 30px;
+            border-radius: 50px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); transition: all 0.4s;
+        }
+
+        /* 頂級核心大框框 */
+        #question-box { 
+            width: 90%; max-width: 800px; height: 280px; 
+            border: 3px dashed rgba(255,255,255,0.2); border-radius: 24px; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            font-size: 3.5rem; font-weight: 800; background: var(--card-bg); 
+            backdrop-filter: blur(15px); margin-bottom: 30px; text-align: center; padding: 20px; 
+            cursor: pointer; user-select: none; transition: all 0.3s ease;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 15px 35px rgba(0,0,0,0.7);
+            letter-spacing: 2px;
+        }
+        #question-box:hover {
+            border-color: rgba(255,255,255,0.6);
+            background: rgba(30, 41, 59, 0.8);
+        }
+        /* 抽題跳動中的特殊效果 */
+        #question-box.spinning {
+            animation: shake 0.1s infinite;
+            border-color: #eab308;
+            box-shadow: 0 0 40px rgba(234, 179, 8, 0.4);
+            filter: blur(1px);
+        }
+
+        /* 判定按鈕控制區 */
+        .controls { display: none; gap: 30px; width: 90%; max-width: 600px; }
+        .btn { 
+            flex: 1; padding: 18px; font-size: 1.5rem; cursor: pointer; 
+            border: none; border-radius: 14px; color: white; font-weight: 800; 
+            letter-spacing: 2px; transition: all 0.2s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        .btn-success { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+            border-bottom: 4px solid #047857;
+        }
+        .btn-fail { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+            border-bottom: 4px solid #b91c1c;
+        }
+        .btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+        .btn:active { transform: translateY(1px); border-bottom-width: 0px; }
+
+        /* 動態特效 */
+        @keyframes pulse { 0% { opacity: 0.9; } 100% { opacity: 1; text-shadow: 0 0 20px #6366f1; } }
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            50% { transform: translate(-1px, -1px) rotate(0.5deg); }
+            100% { transform: translate(1px, -1px) rotate(-0.5deg); }
+        }
     </style>
 </head>
 <body>
 
-    <h1>🎬 電影與影集 O/X 挑戰賽</h1>
-    <div id="question-box">點擊下方按鈕開始題目</div>
-    <button id="next-btn" class="btn" onclick="nextQuestion()">抽取下一題</button>
-    <div id="answer-display"></div>
+    <h1>LG AI影音搜尋大挑戰</h1>
+    
+    <!-- 炫彩計分板 -->
+    <div class="score-board">
+        <div class="team team-a active" id="team-a-box">
+            <div class="team-title">⚡ TEAM A</div>
+            <div class="team-score" id="score-a">0</div>
+        </div>
+        <div class="team team-b" id="team-b-box">
+            <div class="team-title">✨ TEAM B</div>
+            <div class="team-score" id="score-b">0</div>
+        </div>
+    </div>
+
+    <!-- 輪流作答狀態提示 -->
+    <div class="turn-indicator" id="turn-banner" style="color: var(--team-a-glow); text-shadow: 0 0 10px var(--team-a-glow);">
+        請【 TEAM A 】準備抽題
+    </div>
+
+    <!-- 核心問答大框框 (極簡化，移除所有小字) -->
+    <div id="question-box" onclick="toggleSpin()">
+        <div id="question-text">準備抽題</div>
+    </div>
+        
+    <!-- 評分按鈕 -->
+    <div class="controls" id="action-controls">
+        <button class="btn btn-success" onclick="recordResult(true)">⭕ 答對加分</button>
+        <button class="btn btn-fail" onclick="recordResult(false)">❌ 挑戰失敗</button>
+    </div>
 
     <script>
+        // 客製化題庫更新
         const questions = [
-            { q: "《鐵達尼號》中，蘿絲最後讓傑克一起爬上那塊木板了嗎？", a: "X" },
-            { q: "《魷魚遊戲》中，第一關遊戲是「木頭人」嗎？", a: "O" },
-            { q: "《玩命關頭》系列中，馮·迪索飾演的角色叫做路克·哈柏？", a: "X" },
-            { q: "《哈利波特》系列中，石內卜教授一直是佛地魔的忠實部下嗎？", a: "X" },
-            { q: "《絕命毒師》的主角華特·懷特原本是一名高中化學老師？", a: "O" }
+            "《腦筋急轉彎 2》", 
+            "《逐玉》", 
+            "《超人》", 
+            "《阿凡達》", 
+            "《獵魔女團》", 
+            "《魷魚遊戲》", 
+            "《玩命關頭》", 
+            "《單身即地獄》", 
+            "《黑白大廚》", 
+            "《黑豹》", 
+            "《復仇者聯盟》", 
+            "《苦盡柑來遇見你》"
         ];
 
-        let currentAnswer = "";
+        let scoreA = 0;
+        let scoreB = 0;
+        let isSpinning = false;
+        let spinInterval;
+        let currentTeam = 'A'; // A隊先開始
 
-        function nextQuestion() {
-            const randomIndex = Math.floor(Math.random() * questions.length);
-            const item = questions[randomIndex];
-            document.getElementById('question-box').innerText = item.q;
-            document.getElementById('answer-display').innerText = "點擊揭曉答案";
-            currentAnswer = item.a;
+        const questionBox = document.getElementById('question-box');
+        const questionText = document.getElementById('question-text');
+        const controls = document.getElementById('action-controls');
+        const turnBanner = document.getElementById('turn-banner');
+        const teamABox = document.getElementById('team-a-box');
+        const teamBBox = document.getElementById('team-b-box');
+
+        // 輪流切換隊伍的視覺邏輯
+        function refreshTurnUI() {
+            if (currentTeam === 'A') {
+                teamABox.classList.add('active');
+                teamBBox.classList.remove('active');
+                turnBanner.innerText = "請【 TEAM A 】準備抽題";
+                turnBanner.style.color = "var(--team-a-glow)";
+                turnBanner.style.textShadow = "0 0 10px var(--team-a-glow)";
+            } else {
+                teamBBox.classList.add('active');
+                teamABox.classList.remove('active');
+                turnBanner.innerText = "請【 TEAM B 】準備抽題";
+                turnBanner.style.color = "var(--team-b-glow)";
+                turnBanner.style.textShadow = "0 0 10px var(--team-b-glow)";
+            }
         }
 
-        // 點擊框框揭曉答案
-        document.getElementById('question-box').onclick = function() {
-            if(currentAnswer) {
-                document.getElementById('answer-display').innerText = "答案是：" + currentAnswer;
+        // 控制題目隨機滾動
+        function toggleSpin() {
+            if (!isSpinning) {
+                isSpinning = true;
+                controls.style.display = 'none'; 
+                questionBox.classList.add('spinning');
+                
+                spinInterval = setInterval(() => {
+                    const randomIdx = Math.floor(Math.random() * questions.length);
+                    questionText.textContent = questions[randomIdx];
+                }, 40);
+            } else {
+                isSpinning = false;
+                clearInterval(spinInterval);
+                questionBox.classList.remove('spinning');
+                
+                const finalIdx = Math.floor(Math.random() * questions.length);
+                questionText.textContent = questions[finalIdx];
+                
+                controls.style.display = 'flex'; // 跳出判定鈕
             }
-        };
+        }
+
+        // 紀錄得分並自動「換隊」
+        function recordResult(isSuccess) {
+            if (isSuccess) {
+                if (currentTeam === 'A') {
+                    scoreA++;
+                    document.getElementById('score-a').innerText = scoreA;
+                } else {
+                    scoreB++;
+                    document.getElementById('score-b').innerText = scoreB;
+                }
+            }
+            
+            // 自動輪流切換隊伍
+            currentTeam = (currentTeam === 'A') ? 'B' : 'A';
+            
+            // 重置大框框狀態 (極簡乾淨)
+            questionText.textContent = "準備抽題";
+            controls.style.display = 'none';
+            
+            // 更新下一隊的霓虹燈效
+            refreshTurnUI();
+        }
     </script>
 </body>
 </html>
